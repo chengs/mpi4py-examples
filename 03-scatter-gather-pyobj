@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+from __future__ import division
+from __future__ import print_function
+
+import numpy as np
+from mpi4py import MPI
+
+
+comm = MPI.COMM_WORLD
+
+# print("-"*78)
+print(" Running on %d cores" % comm.size)
+# print("-"*78)
+
+N = comm.size
+
+if comm.rank == 0:
+    A = list(range(N))
+else:
+    A = None
+
+# Scatter data into my_A arrays
+my_A = comm.scatter(A, root=0)
+
+print("After Scatter:")
+for r in range(comm.size):
+    if comm.rank == r:
+        print("[%d] %s" % (comm.rank, my_A))
+    comm.barrier()
+
+# Everybody is multiplying by 2
+my_A *= 2
+
+# Allgather data into A again
+A = comm.allgather(my_A)
+
+print("After Allgather:")
+for r in range(comm.size):
+    if comm.rank == r:
+        print("[%d] %s" % (comm.rank, A))
+    comm.barrier()
